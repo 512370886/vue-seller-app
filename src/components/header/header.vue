@@ -38,7 +38,8 @@
   		<img :src="seller.avatar" width="100%" height="100%"/>
   	</div>
   	<!--浮层，fix布局-->
-  	<div class="detail" v-show="showFlag">
+    <transition name="detail">
+    	<div class="detail" v-show="showFlag">
   		<!--sticky footers的经典结构，最外面大的包裹层-->
   		<div class="detail-wrapper clearfix">
   			<!--承载内容层-->
@@ -53,6 +54,20 @@
   					<div class="text">优惠信息	</div>
   					<div class="line"></div>
   				</div>
+  				<ul class="supports" v-if="seller.supports">
+  					<li class="support-item" v-for="(item,index) in seller.supports">
+  						<span class="icon" :class="classMap[seller.supports[index].type]"></span>
+  						<span class="text">{{seller.supports[index].description}}</span>
+  					</li>
+  				</ul>
+  				<div class="title">
+  					<div class="line"></div>
+  					<div class="text">商家公告</div>
+  					<div class="line"></div>
+  				</div>
+  				<div class="bulletin">
+  					<p class="content">{{seller.bulletin}}</p>
+  				</div>
   			</div>
   		</div>
   		<!--定在底部的关闭层-->
@@ -60,6 +75,8 @@
   			<i class="icon-close"></i>
   		</div>
   	</div>
+    </transition>
+  	
   </div>
 </template>
 
@@ -219,6 +236,12 @@ export default {
       height:100%
       overflow:auto  /*为了如果内容超过屏幕的宽度会自动滚动,右边出现滚动条，hidden则不会*/
       background:rgba(7,17,27,0.8)
+      backdrop-filter:blur(10px) /*背景模糊效果*/
+      &.detail-enter-active, &.detail-leave-active
+        transition: all .3s
+      &.detail-enter, &.detail-leave-to
+        transform: translate3d(100%, 0, 0)
+        /*opacity:0*/
       .detail-wrapper
         min-height:100%
         width:100%
@@ -237,7 +260,7 @@ export default {
           .title
             display:flex
             width:80%
-            margin:30px auto 24px auto
+            margin:28px auto 24px auto
             .line
               flex:1
               position:relative
@@ -245,7 +268,45 @@ export default {
               border-bottom:1px solid rgba(255,255,255,0.2)
             .text
               padding:0 12px  /*这里的0代表上下,12px代表左右*/
+              font-weight:700
               font-size:14px
+          .supports
+            width:80%
+            margin:0 auto
+            .support-item
+              padding:0 12px
+              margin-bottom:12px
+              font-size:0
+              &:last-child
+                margin-bottom:0
+              .icon
+                display:inline-block
+                width:16px
+                height:16px
+                vertical-align:top
+                margin-right:6px
+                background-size:16px 16px
+                background-repeat:no-repeat
+                &.decrease
+                  bg-image('decrease_2')
+                &.discount
+                  bg-image('discount_2')
+                &.guarantee
+                  bg-image('guarantee_2')
+                &.invoice
+                  bg-image('invoice_2')
+                &.special
+                  bg-image('special_2')
+              .text
+                font-size:12px
+                line-height:16px
+          .bulletin
+            width:80%
+            margin:0 auto
+            .content
+              padding:0 12px
+              line-height:24px
+              font-size:12px
       .detail-close
         position:relative
         width:32px
