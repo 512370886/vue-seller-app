@@ -9,6 +9,7 @@ import BScroll from 'better-scroll'
 
 export default {
   props: {
+    // 希望better-scroll在滚动时能实时告诉我们y轴的位置，相当于探针的效果
     probeType: {
       type: Number,
       default: 1

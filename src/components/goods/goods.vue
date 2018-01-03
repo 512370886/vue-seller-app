@@ -1,19 +1,24 @@
 <template>
-	<div class="goods">
-		<div class="menu-wrapper">
-			<scroll :data="goods" :probeType='3' :refreshDelay="100">
+  <div class="goods">
+		<scroll class="menu-wrapper" :data="goods" :probeType='3'>
 			  <ul>
-				  <li v-for="(item,index) in goods" class="menu-item">
+				  <li v-for="(item,index) in goods" class="menu-item" 
+				  	                                :class="{'current':currentIndex === index}"
+				  	                                @click="selectMenu(index,$event)">
 						<span class="text">
 							<span v-show="item.type>0" class="icon" :class="classMap[item.type]"></span>{{item.name}}
 						</span>
 				  </li>
 			  </ul>
-			</scroll>
-		</div>
-    <div class="foods-wrapper">
+		</scroll>
+    <scroll class="foods-wrapper" 
+    	      :data="goods" 
+    	      :probeType="3" 
+    	      :listenScroll="listenScroll"
+    	      @scroll="scroll" 
+    	      ref="foodsWrapper">
     	<ul>
-    		<li v-for="item in goods" class="food-list">
+    		<li v-for="item in goods" class="food-list food-list-hook" ref="listGroup">
     			<h1 class="title">{{item.name}}</h1>
     			<ul>
     				<li v-for="food in item.foods" class="food-item">
@@ -24,25 +29,29 @@
     						<h2 class="name">{{food.name}}</h2>
     						<p class="desc">{{food.description}}</p>
     						<div class="extra">
-    							<span>月售{{food.sellCount}}</span>
-    							<span>好评率{{food.rating}}%</span>
+    							<span class="count">月售{{food.sellCount}}</span><span>好评率{{food.rating}}%</span>
     						</div>
     						<div class="price">
-    							<span>￥{{food.price}}</span>
-    							<span v-show="food.oldPrice">￥{{food.oldPrice}}</span>
+    							<span class="now">￥{{food.price}}</span><span class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</span>
+    						</div>
+    						<div class="carcontrol-wrapper">
+    							<carcontrol :food="food"></carcontrol>
     						</div>
     					</div>
     				</li>
     			</ul>
     		</li>
     	</ul>
-    </div>
-	</div>
+    </scroll>
+    <shopcar :deliveryPrice="seller.deliveryPrice" :minPrice="seller.minPrice"></shopcar>
+</div>
   
 </template>
 
 <script type="text/ecmascript-6">
 import Scroll from 'base/scroll/scroll'
+import shopcar from 'components/shopcar/shopcar'
+import carcontrol from 'components/carcontrol/carcontrol'
 const ERR_NO = 0
 export default {
   props: {
@@ -52,10 +61,14 @@ export default {
   },
   data () {
     return {
-      goods: []
+      goods: [],
+      scrollY: 0,
+      listHeight: []
     }
   },
   created () {
+//  this.listHeight = []
+    this.listenScroll = true
     this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee']
     this.$ajax.get('/api/goods').then((res) => {
       res = res.data
@@ -67,8 +80,56 @@ export default {
       alert(error)
     })
   },
+  computed: {
+    currentIndex () {
+      for (let i = 0; i < this.listHeight.length; i++) {
+        let height1 = this.listHeight[i]
+        let height2 = this.listHeight[i + 1]
+        if (!height2 || (this.scrollY >= height1 && this.scrollY < height2)) {
+          return i
+        }
+      }
+      return 0
+    }
+  },
+  methods: {
+    selectMenu (index, event) {
+//    if (!event._constructed) {
+//      return
+//    }
+      console.log(index)
+//    let foodList = this.$refs.foodsWrapper.getElementsByClassName('food-list-hook')
+      let foodList = this.$refs.listGroup
+      this.$refs.foodsWrapper.scrollToElement(foodList[index], 100)
+    },
+    _calculateHeight () {
+      this.listHeight = []
+      let foodList = this.$refs.listGroup
+      console.log(foodList)
+      let height = 0
+      this.listHeight.push(height)
+      for (let i = 0; i < foodList.length; i++) {
+        let item = foodList[i]
+        height += item.clientHeight
+        this.listHeight.push(height)
+      }
+      console.log(this.listHeight)
+    },
+    scroll (pos) {
+      this.scrollY = Math.abs(Math.round(pos.y))
+    }
+  },
+  watch: {
+    goods () {
+      setTimeout(() => {
+        this._calculateHeight()
+      }, 20)
+    }
+  },
   components: {
-    Scroll
+    Scroll,
+    shopcar,
+    carcontrol
   }
 }
 </script>
@@ -93,6 +154,14 @@ export default {
         height:54px
         width:56px
         line-height:14px
+        &.current
+          position:relative
+          z-index: 10
+          margin-top:-1px
+          background:#fff
+          font-weight:700
+          .text
+            border-none()
         .icon
           display:inline-block
           margin-right:2px
@@ -147,5 +216,29 @@ export default {
             line-height:14px
             font-size:14px
             color:rgb(7,17,27)
-          
+          .desc, .extra
+            font-size:10px
+            line-height:10px
+            color:rgb(147,153,159)
+          .desc
+            margin-bottom:8px
+            line-height:12px
+          .extra
+            .count
+              margin-right:12px
+          .price
+            font-weight:700px
+            line-height:24px
+            .now
+              margin-right:8px
+              font-size:14px
+              color:rgb(240, 20, 20)
+            .old
+              text-decoration:line-through
+              font-size:10px
+              color:rgb(147,153,159)
+          .carcontrol-wrapper
+            position:absolute
+            right:0
+            bottom:12px
 </style>

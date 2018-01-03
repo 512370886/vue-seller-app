@@ -2,7 +2,8 @@
   <div id="app">
     <v-header :seller="seller"></v-header>
     <tab></tab>
-    <router-view></router-view>
+    <!--router-view也可以像普通组件一样可以传数据，子组件通过props来接收-->
+    <router-view :seller="seller"></router-view>
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="tab border-1px">
+  <div class="tab">
   	<router-link tag="div" class="tab-item" to="/goods">
   	  <span class="tab-link">商品</span>
   	</router-link>
