@@ -17,19 +17,45 @@
   	  	</div>
   	  </div>
   	</div>
+  	<div class="ball_container">
+      <transition-group name="drop" @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter">
+        <div class="ball" v-for="(ball,index) in balls" :key="index" v-show="ball.show">
+          <span class="inner inner_hook icon-add_circle"></span>
+        </div>
+      </transition-group>
+    </div>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
 export default {
+  data () {
+    return {
+      balls: [
+        {
+          show: false
+        },
+        {
+          show: false
+        },
+        {
+          show: false
+        },
+        {
+          show: false
+        },
+        {
+          show: false
+        }
+      ],
+      dropBalls: []
+    }
+  },
   props: {
     selectFoods: {
       type: Array,
       default () {
-        return [{
-          price: 10,
-          count: 1
-        }]
+        return []
       }
     },
     deliveryPrice: {
@@ -40,6 +66,9 @@ export default {
       type: Number,
       default: 0
     }
+  },
+  created () {
+    this.$root.eventHub.$on('car.add', this.drop)
   },
   computed: {
     totalPrice () {
@@ -61,6 +90,56 @@ export default {
     },
     payClass () {
       return this.totalPrice < this.minPrice ? 'no-enough' : 'enough'
+    }
+  },
+  methods: {
+    drop (ele) {
+      console.log(ele) // 获取到点击的那个添加按钮
+      for (let i = 0; i < this.balls.length; i++) {
+        let ball = this.balls[i]
+        if (!ball.show) {
+          ball.show = true // 表示可以有下落动画
+          ball.el = ele
+          this.dropBalls.push(ball)
+          return // 跳出循环
+        }
+      }
+      console.log(this.dropBalls)
+    },
+    beforeEnter (ele) {
+      let len = this.balls.length
+      while (len--) {
+        let ball = this.balls[len]
+        if (ball.show) {
+          let rect = ball.el.getBoundingClientRect() // 小球盒模型
+          let x = rect.left - 32 // 小球距离购物车图标的位置
+          let y = -(window.innerHeight - rect.top - 22)
+          ele.style.display = ''
+          ele.style.webkitTransform = `translate3d(0,${y}px,0)`
+          ele.style.transform = `translate3d(0,${y}px,0)`
+          let inner = ele.getElementsByClassName('inner_hook')[0]
+          inner.style.webkitTransform = `translate3d(${x}px,0,0)`
+          inner.style.transform = `translate3d(${x}px,0,0)`
+        }
+      }
+    },
+    enter (ele) {
+      /* eslint-disable no-unused-vars */
+      var ch = ele.offsetHeight // 触发浏览器重绘，offsetWidth、offsetTop等方法都可以触发
+      this.$nextTick(() => { // 改回运动初始状态
+        ele.style.webkitTransform = 'translate3d(0, 0, 0)'
+        ele.style.transform = 'translate3d(0,0,0)'
+        let inner = ele.getElementsByClassName('inner_hook')[0]
+        inner.style.webkitTransform = 'translate3d(0,0,0)'
+        inner.style.transform = 'translate3d(0,0,0)'
+      })
+    },
+    afterEnter (ele) {
+      let ball = this.dropBalls.shift()
+      if (ball) {
+        ball.show = false
+        ele.style.display = 'none'
+      }
     }
   }
 }
@@ -154,4 +233,20 @@ export default {
           &.enough
             background:#00b43c
             color:#fff
+    .ball_container
+	    .ball
+	      position:fixed
+	      left:32px
+	      bottom:22px
+	      z-index:100
+	      color:rgb(0,160,220)
+	      &.drop-enter,&.drop-enter-active
+	        transition all .4s cubic-bezier(0.49,-0.29,0.75,0.41)
+	        .inner
+	          display:inline-block
+	          width:16px
+	          height:16px
+	          border-radius:50%
+	          /*background:rgb(0,160,220)*/
+	          transition:all .4s linear
 </style>
