@@ -1,33 +1,61 @@
 <template>
-  <div class="shopcar">
-  	<div class="content">
-  	  <div class="content-left">
-  	  	<div class="logo-wrapper">
-  	  	  <div class="logo" :class="{'heightlight':totalCount&&totalCount>0}">
-  	  	  	<i class="icon-shopping_cart" :class="{'heightlight':totalCount&&totalCount>0}"></i>
-  	  	  </div>
-  	  	  <div class="num" v-show="totalCount&&totalCount>0">{{totalCount}}</div>
-  	  	</div>
-  	  	<div class="price" :class="{'heightlight':totalPrice>0}">￥{{totalPrice}}元</div>
-  	  	<div class="desc">另需配送费￥{{deliveryPrice}}元</div>
-  	  </div>
-  	  <div class="content-right">
-  	  	<div class="pay" :class="payClass">
-  	  	  {{payDesc}}
-  	  	</div>
-  	  </div>
-  	</div>
-  	<div class="ball_container">
-      <transition-group name="drop" @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter">
-        <div class="ball" v-for="(ball,index) in balls" :key="index" v-show="ball.show">
-          <span class="inner inner_hook icon-add_circle"></span>
-        </div>
-      </transition-group>
-    </div>
-  </div>
+	<div>
+	  <div class="shopcar">
+	  	<div class="content" @click="toggleList">
+	  	  <div class="content-left">
+	  	  	<div class="logo-wrapper">
+	  	  	  <div class="logo" :class="{'heightlight':totalCount&&totalCount>0}">
+	  	  	  	<i class="icon-shopping_cart" :class="{'heightlight':totalCount&&totalCount>0}"></i>
+	  	  	  </div>
+	  	  	  <div class="num" v-show="totalCount&&totalCount>0">{{totalCount}}</div>
+	  	  	</div>
+	  	  	<div class="price" :class="{'heightlight':totalPrice>0}">￥{{totalPrice}}元</div>
+	  	  	<div class="desc">另需配送费￥{{deliveryPrice}}元</div>
+	  	  </div>
+	  	  <div class="content-right" @click.stop.prevent="toPay"> <!--stop阻止冒泡，prevent阻止默认事件-->
+	  	  	<div class="pay" :class="payClass">
+	  	  	  {{payDesc}}
+	  	  	</div>
+	  	  </div>
+	  	</div>
+	  	<div class="ball_container">
+	      <transition-group name="drop" @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter">
+	        <div class="ball" v-for="(ball,index) in balls" :key="index" v-show="ball.show">
+	          <span class="inner inner_hook icon-add_circle"></span>
+	        </div>
+	      </transition-group>
+	    </div>
+	    <transition name="up_shift">
+		    <div class="shopcar_list" v-show="listShow">
+		    	<div class="list_header">
+		    		<h1 class="title">购物车</h1>
+		    		<span class="empty" @click="empty">清空</span>
+		    	</div>
+		    	<scroll :data="selectFoods"  class="list_content">
+		    		<ul>
+		    			<li class="food" v-for="food in selectFoods">
+		    				<span class="name">{{food.name}}</span>
+		    				<div class="price">
+		    					<span>￥{{food.price*food.count}}</span>
+		    				</div>
+		    				<div class="carcontrol_wrapper">
+		    					<carcontrol :food="food"></carcontrol>
+		    				</div>
+		    			</li>
+		    		</ul>
+		    	</scroll>
+		    </div>
+	    </transition>
+	  </div>
+	  <transition name="mask_fade">
+	  	<div class="list_mask" v-show="listShow" @click="hideList"></div>
+	  </transition>
+	</div>
 </template>
 
 <script type="text/ecmascript-6">
+import Scroll from 'base/scroll/scroll'
+import carcontrol from 'components/carcontrol/carcontrol'
 export default {
   data () {
     return {
@@ -48,10 +76,12 @@ export default {
           show: false
         }
       ],
-      dropBalls: []
+      dropBalls: [],
+      fold: true
     }
   },
   props: {
+    // 接收从goods组件传过来的数据
     selectFoods: {
       type: Array,
       default () {
@@ -90,6 +120,14 @@ export default {
     },
     payClass () {
       return this.totalPrice < this.minPrice ? 'no-enough' : 'enough'
+    },
+    listShow () {
+      if (!this.totalCount) {
+        this.fold = true
+        return false
+      }
+      let show = !this.fold
+      return show
     }
   },
   methods: {
@@ -140,12 +178,37 @@ export default {
         ball.show = false
         ele.style.display = 'none'
       }
+    },
+    toggleList () {
+      if (!this.totalCount) {
+        return
+      }
+      this.fold = !this.fold
+    },
+    empty () {
+      this.selectFoods.forEach((food) => {
+        food.count = 0
+      })
+    },
+    hideList () {
+      this.fold = true
+    },
+    toPay () {
+      if (this.totalPrice < this.minPrice) {
+        return
+      }
+      alert(`需支付${this.totalPrice}元`)
     }
+  },
+  components: {
+    carcontrol,
+    Scroll
   }
 }
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus" scoped="scoped">
+ @import "~common/stylus/mixin"
   .shopcar
     position:fixed
     left:0
@@ -249,4 +312,78 @@ export default {
 	          border-radius:50%
 	          /*background:rgb(0,160,220)*/
 	          transition:all .4s linear
+	  .shopcar_list
+	    position:absolute
+	    left:0
+	    top:0
+	    z-index:-1
+	    width:100%
+	    /*transition:all .4s*/
+	    transform:translate3d(0,-100%,0)
+	    &.up_shift-enter-active,&.up_shift-leave-active
+	      transition:all .4s
+	    &.up_shift-leave-active
+	      transform:translate3d(0,-100%,0)
+	    &.up_shift-enter,&.up_shift-leave-active
+	      transform:translate3d(0,0,0)
+	    .list_header
+	      height:40px
+	      line-height:40px
+	      padding:0 18px
+	      background:#f3f5f7
+	      border-bottom:2px solid rgba(7,17,27,0.1)
+	      .title
+	        float:left
+	        font-size:14px
+	        color:rgb(7,17,27)
+	      .empty
+	        float:right
+	        font-size:12px
+	        color:rgb(0,160,220)
+	    .list_content
+	      padding:0 18px
+	      max-height:217px
+	      overflow:hidden
+	      background:#fff
+	      .food
+	        position:relative
+	        padding:12px 0
+	        box-sizing:border-box
+	        border-1px(rgba(7,17,27,0.1))
+	        .name
+	          line-height:24px
+	          font-size:14px
+	          color:rgb(7,17,27)
+	        .price
+	          position:absolute
+	          right:90px
+	          bottom:12px
+	          line-height:24px
+	          font-size:14px
+	          font-weight:700
+	          color:rgb(240,20,20)
+	        .carcontrol_wrapper
+	          position:absolute
+	          right:0
+	          bottom:6px
+	.list_mask
+	  position:fixed
+	  top:0
+	  left:0
+	  width:100%
+	  height:100%
+	  z-index:40
+	  backdrop-filter:blur(10px)
+	  background:rgba(7,17,27,0.6)
+	  &.mask_fade-enter-active,&.mask_fade-leave-active
+	    transition:opacity .4s
+	  &.mask_fade-enter,&.mask_fade-leave-to
+	    opacity:0
+	  /*transform:translate3d(0,-100%,0)
+	  &.mask_fade-enter-active,&.mask_fade-leave-active
+	    transition:all .4s
+	  &.mask_fade-leave-active
+	    transform:translate3d(0,-100%,0)
+	  &.mask_fade-enter,&.mask_fade-leave-active
+	    transform:translate3d(0,0,0)*/
 </style>

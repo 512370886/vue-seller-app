@@ -1,12 +1,12 @@
 <template>
   <div class="carcontrol">
   	<transition name="fade">
-  		<div class="car-decrease" v-show="food.count>0" @click="decreaseFood($event)">
+  		<div class="car-decrease" v-show="food.count>0" @click.stop.prevent="decreaseFood($event)">
   			<i class="inner icon-remove_circle_outline"></i>
   		</div>
   	</transition>
     <div class="car-count" v-show="food.count>0">{{food.count}}</div>
-    <div class="car-add icon-add_circle" @click="addfood($event)"></div>
+    <div class="car-add icon-add_circle" @click.stop.prevent="addfood($event)"></div>
   </div>
 </template>
 
@@ -14,6 +14,7 @@
 import Vue from 'vue'
 export default {
   props: {
+    // 接收从goods组件传来的每条商品对象
     food: {
       type: Object
     }

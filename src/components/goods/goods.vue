@@ -1,4 +1,5 @@
 <template>
+<div>
   <div class="goods">
 		<scroll class="menu-wrapper" :data="goods" :probeType='3'>
 			  <ul>
@@ -21,7 +22,7 @@
     		<li v-for="item in goods" class="food-list food-list-hook" ref="listGroup">
     			<h1 class="title">{{item.name}}</h1>
     			<ul>
-    				<li v-for="food in item.foods" class="food-item">
+    				<li v-for="food in item.foods" class="food-item" @click="chooseFood(food,$event)">
     					<div class="icon">
     						<img width="57" height="57" :src="food.icon"/>
     					</div>
@@ -44,17 +45,20 @@
     	</ul>
     </scroll>
     <shopcar :selectFoods="selectFoods" :deliveryPrice="seller.deliveryPrice" :minPrice="seller.minPrice"></shopcar>
+  </div>
+  <foodDetail ref="foodDetail" :food="selectedFood"></foodDetail>
 </div>
-  
 </template>
 
 <script type="text/ecmascript-6">
 import Scroll from 'base/scroll/scroll'
 import shopcar from 'components/shopcar/shopcar'
 import carcontrol from 'components/carcontrol/carcontrol'
+import foodDetail from 'components/foodDetail/foodDetail'
 const ERR_NO = 0
 export default {
   props: {
+    // 接收从App组件传过来的数据
     seller: {
       type: Object
     }
@@ -63,7 +67,8 @@ export default {
     return {
       goods: [],
       scrollY: 0,
-      listHeight: []
+      listHeight: [],
+      selectedFood: {}
     }
   },
   created () {
@@ -128,6 +133,11 @@ export default {
     },
     scroll (pos) {
       this.scrollY = Math.abs(Math.round(pos.y))
+    },
+    chooseFood (food, event) {
+      console.log(event)
+      this.$refs.foodDetail.show()
+      this.selectedFood = food
     }
   },
   watch: {
@@ -140,7 +150,8 @@ export default {
   components: {
     Scroll,
     shopcar,
-    carcontrol
+    carcontrol,
+    foodDetail
   }
 }
 </script>
