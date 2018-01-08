@@ -22,6 +22,9 @@ export default {
       type: Array,
       default: null
     },
+    dataObject: {
+      type: Object
+    },
     // 作用是否要better-scroll去监听滚动事件，为true时需要，为false时不需要
     listenScroll: {
       type: Boolean,
@@ -100,6 +103,11 @@ export default {
   },
   watch: {
     data () {
+      setTimeout(() => {
+        this.refresh()
+      }, this.refreshDelay)
+    },
+    dataObject () {
       setTimeout(() => {
         this.refresh()
       }, this.refreshDelay)
