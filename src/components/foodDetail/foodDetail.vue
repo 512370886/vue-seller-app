@@ -43,7 +43,7 @@
 	  	  					<span class="name">{{rating.username}}</span>
 	  	  					<img class="avatar" :src="rating.avatar" width="12" height="12"/>
 	  	  				</div>
-	  	  				<div class="time">{{rating.rateTime}}</div>
+	  	  				<div class="time">{{rating.rateTime | formatDate(rating.rateTime )}}</div>
 	  	  				<p class="text">
 	  	  					<i :class="{'icon-thumb_up':rating.rateType===0,'icon-thumb_down':rating.rateType===1}"></i>
 	  	  					{{rating.text}}
@@ -66,6 +66,7 @@
    import Split from 'components/split/split'
    import Scroll from 'base/scroll/scroll'
    import ratingselect from 'components/ratingselect/ratingselect'
+   import {dateFormat} from 'common/js/date'
    // const POSITIVE = 0
    // const NEGATIVE = 1
    const ALL = 2
@@ -134,6 +135,12 @@
          } else {
            return type === this.selectType
          }
+       }
+     },
+     filters: {
+       formatDate (time) {
+         let date = new Date(time)
+         return dateFormat(date, 'yyyy-MM-dd hh:mm')
        }
      },
      components: {
