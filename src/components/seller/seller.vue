@@ -1,5 +1,5 @@
 <template>
-  <div class="seller">
+  <scroll class="seller" :dataObject="seller">
   	<div class="seller_content">
   		<div class="overview">
   			<h1 class="title">{{seller.name}}</h1>
@@ -28,19 +28,101 @@
   				  </div>
   				</li>
   			</ul>
+  			<div class="favorite" @click="toggleFavorite">
+  				<i class="icon-favorite" :class="{'active':favorite}"></i>
+  				<span class="text">{{favoriteText}}</span>
+  			</div>
+  		</div>
+  		<split></split>
+  		<div class="bulletin">
+  			<h1 class="title">公告与活动</h1>
+  			<div class="content_wrapper">
+  				<p class="content">{{seller.bulletin}}</p>
+  			</div>
+  			<ul class="supports" v-if="seller.supports">
+  					<li class="support_item" v-for="(item,index) in seller.supports">
+  						<span class="icon" :class="classMap[seller.supports[index].type]"></span>
+  						<span class="text">{{seller.supports[index].description}}</span>
+  					</li>
+  				</ul>
+  		</div>
+  		<split></split>
+  		<div class="pics">
+  			<h1 class="title">商家实景</h1>
+  			<scroll class="pic_wrapper" 
+  				      :data="seller.pics" 
+  				      :scrollX="scrollX" 
+  				      :eventPassthrough="eventPassthrough">
+  				<ul class="pic_list" ref="picList">
+  					<li class="pic_item" v-for="pic in seller.pics">
+  						<img width="120" height="90" :src="pic"/>
+  					</li>
+  				</ul>
+  			</scroll>
+  		</div>
+  		<split></split>
+  		<div class="info">
+  			<h1 class="title">商家信息</h1>
+  			<ul>
+  				<li class="info_item" v-for="info in seller.infos">{{info}}</li>
+  			</ul>
   		</div>
   	</div>
-  </div>
+  </scroll>
 </template>
 
 <script type="text/ecmascript-6">
+import {saveToLocal, loadFromLocal} from 'common/js/store'
 import star from 'components/star/star'
 import split from 'components/split/split'
 import Scroll from 'base/scroll/scroll'
 export default {
+  data () {
+    return {
+      favorite: loadFromLocal(this.seller.id, 'favorite', false),
+      scrollX: true,
+      scrollY: false, // 非必传
+      eventPassthrough: 'vertical' // // 非必传
+    }
+  },
   props: {
     seller: {
       type: Object
+    }
+  },
+  computed: {
+    favoriteText () {
+      return this.favorite ? '已收藏' : '收藏'
+    }
+  },
+  created () {
+    this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee']
+  },
+  mounted () {
+    this.$nextTick(() => {
+      this.setWidth()
+    })
+  },
+  methods: {
+    setWidth () {
+      if (this.seller.pics) {
+        let picW = 120
+        let margin = 6
+        let w = (picW + margin) * this.seller.pics.length - margin
+        this.$refs.picList.style.width = w + 'px'
+      }
+    },
+    toggleFavorite () {
+      this.favorite = !this.favorite
+      console.log(this.seller.id)
+      saveToLocal(this.seller.id, 'favorite', this.favorite)
+    }
+  },
+  watch: {
+    seller () {
+      this.$nextTick(() => {
+        this.setWidth()
+      })
     }
   },
   components: {
@@ -61,6 +143,7 @@ export default {
     width:100%
     overflow:hidden
     .overview
+      position:relative
       padding:18px
       .title
         margin-bottom:8px
@@ -69,10 +152,142 @@ export default {
         font-size:14px
       .desc
         padding-bottom:18px
-        line-height:18px
         border-1px(rgba(7,17,27,0.1))
         font-size:0
         .star
           display:inline-block
+          margin-right:8px
           vertical-align:top
+        .text
+          display:inline-block
+          margin-right:12px
+          vertical-align:top
+          line-height:18px
+          font-size:10px
+          color:rgb(77,85,93)
+      .remark
+        display:flex
+        padding-top:18px
+        .block
+          flex:1
+          text-align:center
+          border-right:1px solid rgba(7,17,27,0.1)
+          &:last-child
+            border:none
+          h2
+            margin-bottom:4px
+            line-height:10px
+            font-size:10px
+            font-weight:200
+            color:rgb(147,153,159)
+          .content
+            line-height:24px
+            font-size:10px
+            color:rgb(7,17,27)
+            .stress
+              font-size:24px
+      .favorite
+        position:absolute
+        right:10px
+        top:18px
+        width:50px
+        text-align:center
+        font-size:0
+        .icon-favorite
+          display:block
+          margin-bottom:4px
+          line-height:24px
+          font-size:24px
+          color:#d4d6d9
+          &.active
+            color:rgb(240,20,20)
+        .text
+          line-height:10px
+          font-size:10px
+          color:rgb(77,85,93)
+    .bulletin
+      padding:18px 12px 0 12px
+      .title
+        margin-bottom:8px
+        line-height:14px
+        color:rgb(7,17,27)
+        font-size:14px
+      .content_wrapper
+        padding:0 12px 16px 12px
+        border-1px(rgba(7,17,27,0.1))
+        .content
+          line-height:24px
+          font-size:12px
+          font-weight:200
+          color:rgb(240,20,20)
+      .supports
+        .support_item
+          padding:16px 12px
+          border-1px(rgba(7,17,27,0.1))
+          font-size:0
+          &:last-child
+            border-none()
+          .icon
+            display:inline-block
+            margin-right:4px
+            vertical-align: top /*左右顶部对齐方式*/
+            width:12px
+            height:12px
+            background-size:12px 12px
+            background-repeat: no-repeat
+            &.decrease
+              bg-image('decrease_4')
+            &.discount
+              bg-image('discount_4')
+            &.guarantee
+              bg-image('guarantee_4')
+            &.invoice
+              bg-image('invoice_4')
+            &.special
+              bg-image('special_4')
+          .text
+            display:inline-block
+            vertical-align: top /*左右顶部对齐方式*/
+            line-height:16px
+            font-size:12px
+            font-weight:200
+            color:rgb(7,17,27)
+    .pics
+      padding:18px
+      .title
+        margin-bottom:12px
+        line-height:14px
+        color:rgb(7,17,27)
+        font-size:14px
+      .pic_wrapper
+        width:100%
+        overflow:hidden
+        white-space:nowrap
+        .pic_list
+          font-size:0
+          .pic_item
+            display:inline-block
+            margin-right:6px
+            width:120px
+            height:90px
+            &:last-child
+              margin:0
+    .info
+      padding:18px 18px 0 18px
+      .title
+        padding-bottom:12px
+        line-height:14px
+        border-1px(rgba(7,17,27,0.1))
+        color:rgb(7,17,27)
+        font-size:14px
+      ul
+        .info_item
+          padding:16px 12px
+          line-height:16px
+          border-1px(rgba(7,17,27,0.1))
+          color:rgb(7,17,27)
+          font-size:12px
+          font-weight:200
+          &:last-child
+            border-none()
 </style>

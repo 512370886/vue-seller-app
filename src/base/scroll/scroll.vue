@@ -18,6 +18,18 @@ export default {
       type: Boolean,
       default: true
     },
+    scrollX: {
+      type: Boolean,
+      default: false
+    },
+    scrollY: {
+      type: Boolean,
+      default: true
+    },
+    eventPassthrough: {
+      type: String,
+      default: ''
+    },
     data: {
       type: Array,
       default: null
@@ -56,8 +68,11 @@ export default {
         return
       }
       this.scroll = new BScroll(this.$refs.wrapper, {
+        scrollX: this.scrollX,
+        scrollY: this.scrollY,
         probeType: this.probeType,
-        click: this.click
+        click: this.click,
+        eventPassthrough: this.eventPassthrough
       })
       // 如果scroll监听了滚动事件，scroll组件派发的滚动事件以获取滚动位置
       if (this.listenScroll) {
